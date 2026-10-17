@@ -46,7 +46,7 @@ This scenario follows an administrative workflow involving meeting documentation
 4. **Update reimbursements:** Enter the relevant quantities, prices, and approval statuses on the **Reimbursement** sheet.
 5. **Finalise the spreadsheet:** Return to **Summary**, update the reimbursement information, calculate net earnings using spreadsheet references, and save the workbook.
 
-**End point:** The scenario finishes with the spreadsheet. **Sending email is not part of the final workflow.**
+**End point:** The scenario finishes with the spreadsheet. 
 
 ### Scenario 2 — Financial Researcher
 
