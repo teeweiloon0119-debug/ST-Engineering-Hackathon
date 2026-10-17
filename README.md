@@ -148,7 +148,10 @@ The expected demonstration outputs include:
 
 **Big QYL**
 
-Team member names and roles: **`[TO BE ADDED]`**
+Team member names and roles: 
+1. Khoo Ding Feng - Web Browsing
+2. Tan Wei Hang - Orchestrator
+3. Tee Wei Loon - OpenOffice Writer and Calc
 
 ---
 
