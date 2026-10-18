@@ -1,0 +1,12 @@
+.claude/
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+.DS_Store
+Thumbs.db
+*.odt
+*.docx
+research_notes_session.json
+agent_debug.log

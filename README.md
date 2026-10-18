@@ -6,7 +6,7 @@ This is a Python-based desktop automation project that demonstrates two multi-ap
 
 The project is demonstrated through a single launch action in a prepared VM. **Sysmon** and **Process Monitor** are used to observe and document activity generated during execution.
 
-> **Project status:** Both scenarios are included in the submission. Final repository filenames, code layout, and evidence paths will be added when the team consolidates its source code.
+> **Project status:** Both scenarios are implemented and integrated into a single combined agent (`orchestrator.py`). The source code has been consolidated into this repository; final filenames and code layout are documented under **Repository structure** below. Monitoring evidence has been captured and is included in the submission documentation.
 
 ## Project objectives
 
@@ -76,10 +76,21 @@ The combined workflow uses Python to orchestrate desktop actions on a preconfigu
 | **Sysmon** | System event logging for analysis |
 | **Process Monitor** | Observation of process, file, and related system activity |
 
+### Orchestration and process design
+
+The two scenarios and all individual modules are coordinated by a single orchestrator (`orchestrator.py`), which is the only program launched at run time:
+
+- **Single process:** The orchestrator *imports* each module (web browsing, Writer, Calc, research notes, financial report) as Python functions rather than launching them as separate scripts or subprocesses, so the whole run executes inside one `pythonw.exe` process with no console window and no child interpreters.
+- **In-memory handoff:** Data shared between stages (for example, the selected research topic) is passed in memory, so no intermediate/session files are written to disk.
+- **Behaviour-tree-inspired control:** Stages run as an ordered sequence; each stage is wrapped in error handling so a single failure is logged and the workflow continues.
+- **Adaptive timing:** The orchestrator targets a run length of roughly 15 minutes by adjusting only the pauses *between* stages, never speeding up or cutting a stage in progress.
+- **Emergency stop:** A background watcher thread terminates the run immediately on a hotkey (Shift + Esc) if manual intervention is needed.
+
 ### Interaction design
 
 - The agent follows a defined sequence of tasks while switching among documents, spreadsheet sheets, and web pages.
-- Writer automation includes controlled typing intervals and editing interactions.
+- Writer automation includes controlled typing intervals and editing interactions, including variable per-character delays and occasional typo-and-correction behaviour.
+- Web automation uses non-linear timing, curved (Bézier) mouse movement, and scrolling that mimic human browsing.
 - Calc automation uses cell entry and formulas, including updating dependent financial figures.
 - The financial-report stage positions two Writer windows side by side so research notes remain visible while the report is written.
 - Desktop window size, display resolution, application focus, and zoom settings can affect coordinate-based interactions; the demo VM should retain the configuration used for testing.
@@ -89,45 +100,63 @@ The combined workflow uses Python to orchestrate desktop actions on a preconfigu
 **Execution model:** One-click launch of the **combined agent** in the team's prepared Proxmox Windows VM.
 
 1. Start the prepared Windows VM and ensure the required applications and monitoring tools are available.
-2. Launch the combined agent using the team's **one-click entry point**: **`[TO BE ADDED: launcher or script name]`**.
+2. Launch the combined agent using the team's **one-click entry point**: **`orchestrator.py`**. In the demo VM this is registered as a **Windows Scheduled Task**, so a single trigger starts it via `pythonw.exe` (no console window). Launching through the shell / Task Scheduler keeps the process telemetry clean for analysis.
 3. Observe the two scenarios running in sequence.
 4. Review the resulting documents, workbook, and Sysmon/Process Monitor records.
 
-> **Setup note:** The final entry-point filename and detailed environment provisioning steps have not yet been confirmed. The one-click workflow assumes the VM has already been configured. This README will be updated with exact paths and reproducible setup instructions after integration.
+> **Setup note:** The one-click workflow assumes the VM has already been configured with OpenOffice, a web browser, the input workbook, and the monitoring tools. At run time the module files are placed in a single working folder alongside `orchestrator.py` (in this repository they are grouped into `DF/` and `WL/` subfolders for authorship clarity — see **Repository structure**). The VM must retain the display resolution and window configuration used during testing, as some interactions are coordinate-based.
 
 ## Repository structure
 
-The final folder names and filenames are **to be determined**. Replace this placeholder with the actual GitHub tree after combining the scripts:
-
 ```text
-[repository-root]/
+ST-Engineering-Hackathon/
 ├── README.md
-├── [TO BE ADDED: combined agent entry point]
-├── [TO BE ADDED: scenario modules / supporting code]
-├── [TO BE ADDED: required input files, if distributable]
-└── [TO BE ADDED: demo images, logs, or documentation]
+├── .gitignore
+├── orchestrator.py                     # combined agent entry point (runs both scenarios)
+├── DF/
+│   └── web_tasks.py                    # web browsing module (Khoo Ding Feng)
+└── WL/                                 # OpenOffice Writer & Calc modules (Tee Wei Loon)
+    ├── office_worker.py                # meeting notes (Scenario 1)
+    ├── spreadsheet_part1.py            # salary update
+    ├── spreadsheet_part2.py            # Apple laptop reimbursement
+    ├── spreadsheet_part3.py            # external SSD reimbursement
+    ├── spreadsheet_part4.py            # summary & net earnings
+    ├── research_notes_part1.py         # research notes — part 1 (Scenario 2)
+    ├── research_notes_part2.py         # research notes — part 2 (Scenario 2)
+    ├── financial_report.py             # split-screen financial report (Scenario 2)
+    └── profit and loss statement.ods   # input workbook for Calc
 ```
+
+> **Note on layout vs. runtime:** The `DF/` and `WL/` folders preserve authorship. For a live run, the `.py` modules are co-located in a single folder with `orchestrator.py` so the orchestrator can import them directly.
 
 ## Outputs and evidence
 
-The expected demonstration outputs include:
+The demonstration produces the following outputs:
 
-- **Scenario 1:** A saved Writer meeting-notes document and an updated Calc workbook.
-- **Scenario 2:** Saved Writer research notes and a saved financial report.
-- **Monitoring evidence:** Screenshots and/or exported evidence from Sysmon and Process Monitor showing activity during the run.
-- **Demo video:** A recording or walkthrough of the combined workflow.
+- **Scenario 1:** A saved Writer meeting-notes document (`Meeting Notes`) and an updated Calc workbook (`Profit and Loss Statement`).
+- **Scenario 2:** Saved Writer research notes (`Research Notes`) and a saved financial report (`Financial Report`).
+- **Monitoring evidence:** Screenshots and exported evidence from Sysmon and Process Monitor / Process Explorer showing activity during the run.
+- **Demo video:** A screen recording of the combined workflow.
 
-**Screenshots and links** will be added here after capture:
+Key verification results captured during a full run:
+
+- Both scenarios completed in a single run (**0 stages failed**), in approximately **16 minutes**.
+- Applications (Chrome, OpenOffice Writer) launched with parent process **`explorer.exe`** — a human-like launch path.
+- The agent ran as a **single `pythonw.exe`** process (no console, no child interpreters), launched by the Windows Task Scheduler service.
+- **No** `cmd.exe` / `conhost.exe` / `powershell.exe` were spawned, and **no** debug or session files were left on disk.
+- Resource use: agent ≈ **0.5% CPU / ≈ 11 MB RAM**, with the real applications (e.g. Chrome ≈ 269 MB) accounting for nearly all usage.
+
+**Screenshots and links** are tracked below:
 
 | Evidence | Status |
 | --- | --- |
-| Scenario 1 — Writer and Calc | `[TO BE ADDED]` |
-| Scenario 1 — Web and reimbursement workflow | `[TO BE ADDED]` |
-| Scenario 2 — Research notes and split-screen report | `[TO BE ADDED]` |
-| Sysmon event logs | `[TO BE ADDED]` |
-| Process Monitor capture | `[TO BE ADDED]` |
-| 15-minute demo video / walkthrough | `[TO BE ADDED]` |
-| Implementation report (PDF) | `[TO BE ADDED]` |
+| Scenario 1 — Writer and Calc | Captured — in submission documentation |
+| Scenario 1 — Web and reimbursement workflow | Captured — in submission documentation |
+| Scenario 2 — Research notes and split-screen report | Captured — in submission documentation |
+| Sysmon event logs | Captured — in submission documentation |
+| Process Monitor / Process Explorer capture | Captured — in submission documentation |
+| 15-minute demo video / walkthrough | Recorded — to be linked |
+| Implementation report (PDF) | Drafted — in submission documentation |
 
 ## Known limitations
 
@@ -139,7 +168,7 @@ The expected demonstration outputs include:
 ## Submission checklist
 
 - [ ] Upload the complete combined source code to GitHub.
-- [ ] Replace all `[TO BE ADDED]` placeholders with final filenames, instructions, screenshots, and links.
+- [ ] Replace any remaining placeholders with final links (demo video, Devpost).
 - [ ] Submit the GitHub repository URL to Devpost.
 - [ ] Submit the implementation documentation as a PDF, including architecture, agent functions, screenshots, and system/event-log evidence.
 - [ ] Submit a clear demo video or walkthrough covering the live run.
@@ -155,4 +184,4 @@ Team member names and roles:
 
 ---
 
-*Prepared for the NTU X-ST Engineering Hackathon. The workflows and tooling above reflect the team's stated implementation scope; unconfirmed submission details are intentionally left as placeholders.*
+*Prepared for the NTU X-ST Engineering Hackathon. The workflows and tooling above reflect the team's implementation; any remaining placeholders mark external artefacts (e.g. the final demo-video link) to be added before submission.*
