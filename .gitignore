@@ -1,0 +1,4 @@
+__pycache__/
+*.pyc
+uia_diag.txt
+test_*_log.txt
