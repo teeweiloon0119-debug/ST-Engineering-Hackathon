@@ -52,7 +52,7 @@ This scenario follows an administrative workflow involving meeting documentation
 
 This scenario models a research-to-report workflow in which the agent collects market context, records notes, and drafts a structured report using a side-by-side document layout.
 
-1. **Browse research sources:** Navigate between [CoinMarketCap](https://coinmarketcap.com/) and [AP News](https://apnews.com/).
+1. **Browse research sources:** Navigate between [CoinGecko](https://coingecko.com/) and [AP News](https://apnews.com/).
 2. **Prepare research notes:** Use OpenOffice Writer to record cryptocurrency-market observations, news context, and a short conclusion while the research phase progresses.
 3. **Set up split screen:** Keep the completed **Research Notes** document on the **left**, and open a second Writer document for the **Financial Report** on the **right**.
 4. **Draft the financial report:** Write the report using material aligned with the selected research topic, then save the document.
